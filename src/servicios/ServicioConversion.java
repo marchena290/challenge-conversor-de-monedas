@@ -8,9 +8,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ServicioConversion {
+
+    // Crear un Map para almacenar las monedas filtradas
+    private final Map<String, Double> tasasCambio = new HashMap<>();
+
     public void obtenerTasasCambio() {
+
+        // Instancia de la clase ConversorApi
         ConversorApi api = new ConversorApi();
-        Gson gson = new Gson();
+
         try {
             // LLamar a la API y obtener la respuesta
             HttpResponse<String> response = api.consultarDivisa();
@@ -24,16 +30,15 @@ public class ServicioConversion {
             // Obtener el objeto con las tasas de cambio
             JsonObject conversionRates = jsonObject.getAsJsonObject("conversion_rates");
 
-            // Crear un Map para almacenar las monedas filtradas
-            Map<String, Double> monedasFiltradas = new HashMap<>();
+            tasasCambio.clear();
 
             // Arreglo con codigos de las monedas
-            String [] monedas = {"ARS", "COP", "USD", "BRL"};
+            String[] monedas = {"ARS", "COP", "USD", "BRL"};
 
             // Iterar sobre las monedas y extraer sus valores
             for (String moneda: monedas) {
                 double valor = conversionRates.get(moneda).getAsDouble();
-                monedasFiltradas.put(moneda, valor);
+                tasasCambio.put(moneda, valor);
             }
 
         } catch (IOException | InterruptedException e) {
@@ -41,4 +46,22 @@ public class ServicioConversion {
             e.printStackTrace();
         }
     }
+
+    // Metodo para convertir de USD a Moneda
+    public double convertirDeUsdAMoneda(String moneda, double cantidad) {
+        if (!tasasCambio.containsKey(moneda)) {
+            throw new IllegalArgumentException("Moneda no disponible" + moneda);
+        }
+        return cantidad * tasasCambio.get(moneda);
+    }
+
+    // Metodo para convertir de Moneda a USD
+    public double convertirDeMonedaAUsd(String moneda, double cantidad) {
+        if (!tasasCambio.containsKey(moneda)) {
+            throw new IllegalArgumentException("Moneda no disponible" + moneda);
+        }
+        return cantidad / tasasCambio.get(moneda);
+    }
+
+
 }
